@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2457e6">
+  <meta name="description" content="Update location, room activity, and do not disturb status.">
+  <title>Update My Status</title>
+  <link rel="stylesheet" href="./styles.css?v=1">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="page-header">
+      <h1>Update My Status</h1>
+      <p>Choose your status, then tap Save.</p>
+    </header>
+
+    <section class="card form-card">
+      <div class="form-section">
+        <h2>Location</h2>
+        <div class="choice-grid location-grid" data-group="location">
+          <button class="choice-button" type="button" data-value="campus" aria-pressed="false">
+            <span class="choice-icon" aria-hidden="true">🏫</span>
+            On Campus
+          </button>
+          <button class="choice-button" type="button" data-value="offCampus" aria-pressed="false">
+            <span class="choice-icon" aria-hidden="true">🚗</span>
+            Off Campus
+          </button>
+          <button class="choice-button" type="button" data-value="room" aria-pressed="true">
+            <span class="choice-icon" aria-hidden="true">🏠</span>
+            In My Room
+          </button>
+        </div>
+      </div>
+
+      <div id="activitySection" class="form-section">
+        <h2>If in room, I am currently</h2>
+        <div class="choice-grid" data-group="activity">
+          <button class="choice-button" type="button" data-value="sleeping" aria-pressed="false">
+            <span class="choice-icon" aria-hidden="true">😴</span>
+            Sleeping
+          </button>
+          <button class="choice-button long-label" type="button" data-value="working" aria-pressed="false">
+            <span class="choice-icon" aria-hidden="true">📚</span>
+            Homework / Club Stuff / Something Important
+          </button>
+          <button class="choice-button" type="button" data-value="chilling" aria-pressed="true">
+            <span class="choice-icon" aria-hidden="true">😎</span>
+            Chilling
+          </button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Do Not Disturb?</h2>
+        <div class="choice-grid two" data-group="doNotDisturb">
+          <button class="choice-button" type="button" data-value="true" aria-pressed="false">
+            <span class="choice-icon" aria-hidden="true">🔴</span>
+            Yes
+          </button>
+          <button class="choice-button" type="button" data-value="false" aria-pressed="true">
+            <span class="choice-icon" aria-hidden="true">🟢</span>
+            No
+          </button>
+        </div>
+      </div>
+
+      <button id="saveButton" class="save-button" type="button">Save Status</button>
+      <p id="saveMessage" class="save-message" role="status" aria-live="polite"></p>
+    </section>
+
+    <details id="setupCard" class="setup-card">
+      <summary>One-time phone setup</summary>
+      <p>Your phone needs a limited GitHub token so this page can update the shared status file.</p>
+      <ol>
+        <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">GitHub’s fine-grained token page</a>.</li>
+        <li>Give the token access only to the <strong>where-am-I-</strong> repository.</li>
+        <li>Under repository permissions, set <strong>Contents</strong> to <strong>Read and write</strong>.</li>
+        <li>Create the token, copy it, and paste it below.</li>
+      </ol>
+
+      <div class="token-row">
+        <input id="tokenInput" class="token-input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste GitHub token">
+        <button id="saveTokenButton" class="secondary-button" type="button">Save Token on This Phone</button>
+      </div>
+
+      <div id="connectionLine" class="connection-line hidden">
+        <span>GitHub is connected on this phone.</span>
+        <button id="forgetTokenButton" class="text-button" type="button">Forget token</button>
+      </div>
+    </details>
+
+    <p class="footer-note">The token stays in this browser and is sent only to GitHub.</p>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const owner = "ajohnson2942";
+      const repo = "where-am-I-";
+      const branch = "main";
+      const statusPath = "status.json";
+      const tokenStorageKey = "whereAmI.githubToken.where-am-I-";
+
+      const state = {
+        location: "room",
+        activity: "chilling",
+        doNotDisturb: false
+      };
+
+      const activitySection = document.getElementById("activitySection");
+      const saveButton = document.getElementById("saveButton");
+      const saveMessage = document.getElementById("saveMessage");
+      const setupCard = document.getElementById("setupCard");
+      const tokenInput = document.getElementById("tokenInput");
+      const saveTokenButton = document.getElementById("saveTokenButton");
+      const forgetTokenButton = document.getElementById("forgetTokenButton");
+      const connectionLine = document.getElementById("connectionLine");
+
+      function getToken() {
+        return localStorage.getItem(tokenStorageKey) || "";
+      }
+
+      function setMessage(text, type = "") {
+        saveMessage.textContent = text;
+        saveMessage.className = `save-message ${type}`.trim();
+      }
+
+      function updateTokenUi() {
+        const connected = Boolean(getToken());
+        connectionLine.classList.toggle("hidden", !connected);
+        tokenInput.classList.toggle("hidden", connected);
+        saveTokenButton.classList.toggle("hidden", connected);
+        setupCard.open = !connected;
+      }
+
+      function updateActivityVisibility() {
+        activitySection.classList.toggle("hidden", state.location !== "room");
+      }
+
+      function selectButton(groupName, value) {
+        const group = document.querySelector(`[data-group="${groupName}"]`);
+        if (!group) return;
+
+        group.querySelectorAll(".choice-button").forEach(button => {
+          button.setAttribute("aria-pressed", String(button.dataset.value === String(value)));
+        });
+      }
+
+      function applyStateToButtons() {
+        selectButton("location", state.location);
+        selectButton("activity", state.activity);
+        selectButton("doNotDisturb", state.doNotDisturb);
+        updateActivityVisibility();
+      }
+
+      function decodeBase64Utf8(value) {
+        const binary = atob(value.replace(/\n/g, ""));
+        const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+        return new TextDecoder().decode(bytes);
+      }
+
+      function encodeBase64Utf8(value) {
+        const bytes = new TextEncoder().encode(value);
+        let binary = "";
+        bytes.forEach(byte => {
+          binary += String.fromCharCode(byte);
+        });
+        return btoa(binary);
+      }
+
+      async function getStatusFile(token = "") {
+        const url = `https://api.github.com/repos/${owner}/${repo}/contents/${statusPath}?ref=${branch}&t=${Date.now()}`;
+        const headers = {
+          Accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28"
+        };
+
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+
+        const response = await fetch(url, {
+          cache: "no-store",
+          headers
+        });
+
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          throw new Error(body.message || `GitHub returned ${response.status}`);
+        }
+
+        return response.json();
+      }
+
+      async function loadCurrentStatus() {
+        try {
+          const file = await getStatusFile();
+          const current = JSON.parse(decodeBase64Utf8(file.content));
+          state.location = current.location || state.location;
+          state.activity = current.activity || state.activity;
+          state.doNotDisturb = Boolean(current.doNotDisturb);
+          applyStateToButtons();
+        } catch (error) {
+          console.warn("Could not preload current status:", error);
+        }
+      }
+
+      async function saveStatus() {
+        const token = getToken();
+
+        if (!token) {
+          setupCard.open = true;
+          tokenInput.focus();
+          setMessage("Complete the one-time phone setup first.", "error");
+          return;
+        }
+
+        saveButton.disabled = true;
+        saveButton.textContent = "Saving…";
+        setMessage("");
+
+        try {
+          const currentFile = await getStatusFile(token);
+          const status = {
+            location: state.location,
+            activity: state.activity,
+            doNotDisturb: state.doNotDisturb,
+            updatedAt: new Date().toISOString()
+          };
+
+          const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${statusPath}`, {
+            method: "PUT",
+            headers: {
+              Accept: "application/vnd.github+json",
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              "X-GitHub-Api-Version": "2022-11-28"
+            },
+            body: JSON.stringify({
+              message: "Update room status",
+              content: encodeBase64Utf8(`${JSON.stringify(status, null, 2)}\n`),
+              sha: currentFile.sha,
+              branch
+            })
+          });
+
+          if (!response.ok) {
+            const body = await response.json().catch(() => ({}));
+            throw new Error(body.message || `GitHub returned ${response.status}`);
+          }
+
+          setMessage("Status updated everywhere.", "success");
+        } catch (error) {
+          console.error(error);
+          setMessage(`Could not save: ${error.message}`, "error");
+        } finally {
+          saveButton.disabled = false;
+          saveButton.textContent = "Save Status";
+        }
+      }
+
+      document.querySelectorAll("[data-group]").forEach(group => {
+        group.addEventListener("click", event => {
+          const button = event.target.closest(".choice-button");
+          if (!button) return;
+
+          const groupName = group.dataset.group;
+          const rawValue = button.dataset.value;
+
+          if (groupName === "doNotDisturb") {
+            state.doNotDisturb = rawValue === "true";
+          } else {
+            state[groupName] = rawValue;
+          }
+
+          selectButton(groupName, rawValue);
+          updateActivityVisibility();
+          setMessage("");
+        });
+      });
+
+      saveButton.addEventListener("click", saveStatus);
+
+      saveTokenButton.addEventListener("click", () => {
+        const token = tokenInput.value.trim();
+
+        if (!token) {
+          setMessage("Paste your GitHub token first.", "error");
+          return;
+        }
+
+        localStorage.setItem(tokenStorageKey, token);
+        tokenInput.value = "";
+        updateTokenUi();
+        setMessage("Phone connected. You can now save your status.", "success");
+      });
+
+      forgetTokenButton.addEventListener("click", () => {
+        localStorage.removeItem(tokenStorageKey);
+        updateTokenUi();
+        setMessage("The saved token was removed from this phone.");
+      });
+
+      updateTokenUi();
+      applyStateToButtons();
+      loadCurrentStatus();
+
+    })();
+  </script>
+</body>
+</html>
