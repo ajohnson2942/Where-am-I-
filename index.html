@@ -6,14 +6,11 @@
   <meta name="theme-color" content="#2457e6">
   <meta name="description" content="Current location, room activity, and do not disturb status.">
   <title>Where Am I?</title>
-  <link rel="stylesheet" href="./styles.css?v=1">
+  <link rel="stylesheet" href="./styles.css?v=2">
 </head>
 <body>
   <main class="page-shell">
-    <header class="page-header">
-      <h1>Where Am I?</h1>
-    </header>
-
+    <header class="page-header"><h1>Where Am I?</h1></header>
     <section id="statusCard" class="card" aria-live="polite">
       <div class="loading">Loading current status…</div>
     </section>
@@ -22,23 +19,22 @@
   <script>
     (() => {
       "use strict";
-
       const owner = "ajohnson2942";
-      const repo = "where-am-I-";
+      const repo = "Where-am-I-";
       const branch = "main";
       const statusPath = "status.json";
       const card = document.getElementById("statusCard");
 
       const locations = {
-        campus: { label: "On Campus", icon: "🏫" },
-        offCampus: { label: "Off Campus", icon: "🚗" },
-        room: { label: "In My Room", icon: "🏠" }
+        campus: "On Campus",
+        offCampus: "Off Campus",
+        room: "In My Room"
       };
 
       const activities = {
-        sleeping: { label: "Sleeping", icon: "😴" },
-        working: { label: "Homework / Club Stuff / Something Important", icon: "📚" },
-        chilling: { label: "Chilling", icon: "😎" }
+        sleeping: "Sleeping",
+        working: "Homework / Club Stuff / Something Important",
+        chilling: "Chilling"
       };
 
       function decodeBase64Utf8(value) {
@@ -56,11 +52,7 @@
             "X-GitHub-Api-Version": "2022-11-28"
           }
         });
-
-        if (!response.ok) {
-          throw new Error(`GitHub returned ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
         const file = await response.json();
         return JSON.parse(decodeBase64Utf8(file.content));
       }
@@ -68,56 +60,39 @@
       async function fetchFromRawFile() {
         const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${statusPath}?t=${Date.now()}`;
         const response = await fetch(url, { cache: "no-store" });
-
-        if (!response.ok) {
-          throw new Error(`Status file returned ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`Status file returned ${response.status}`);
         return response.json();
       }
 
       function renderStatus(status) {
         const location = locations[status.location] || locations.room;
+        const inRoom = status.location === "room";
         const activity = activities[status.activity] || activities.chilling;
-        const showActivity = status.location === "room";
         const dnd = Boolean(status.doNotDisturb);
 
         card.innerHTML = `
           <div class="status-section">
             <p class="status-label">Location</p>
-            <p class="status-value">
-              <span class="status-icon" aria-hidden="true">${location.icon}</span>
-              <span>${location.label}</span>
-            </p>
+            <p class="status-value"><span>${location}</span></p>
           </div>
-
-          ${showActivity ? `
+          ${inRoom ? `
             <div class="status-section">
               <p class="status-label">If in room, I am currently</p>
-              <p class="status-value ${status.activity === "working" ? "long" : ""}">
-                <span class="status-icon" aria-hidden="true">${activity.icon}</span>
-                <span>${activity.label}</span>
-              </p>
+              <p class="status-value ${status.activity === "working" ? "long" : ""}"><span>${activity}</span></p>
+            </div>
+            <div class="status-section">
+              <p class="status-label">Do Not Disturb?</p>
+              <span class="dnd-pill ${dnd ? "yes" : "no"}">${dnd ? "🔴 Yes" : "🟢 No"}</span>
             </div>
           ` : ""}
-
-          <div class="status-section">
-            <p class="status-label">Do Not Disturb?</p>
-            <span class="dnd-pill ${dnd ? "yes" : "no"}">${dnd ? "Yes" : "No"}</span>
-          </div>
         `;
       }
 
       async function loadStatus() {
         try {
           let status;
-
-          try {
-            status = await fetchFromGitHubApi();
-          } catch (apiError) {
-            status = await fetchFromRawFile();
-          }
-
+          try { status = await fetchFromGitHubApi(); }
+          catch (apiError) { status = await fetchFromRawFile(); }
           renderStatus(status);
         } catch (error) {
           console.error(error);
@@ -127,18 +102,9 @@
 
       loadStatus();
       window.setInterval(loadStatus, 120000);
-
       document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") {
-          loadStatus();
-        }
+        if (document.visibilityState === "visible") loadStatus();
       });
-
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("./sw.js").catch(error => {
-          console.warn("Service worker registration failed:", error);
-        });
-      }
     })();
   </script>
 </body>

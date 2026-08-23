@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#2457e6">
   <meta name="description" content="Update location, room activity, and do not disturb status.">
   <title>Update My Status</title>
-  <link rel="stylesheet" href="./styles.css?v=1">
+  <link rel="stylesheet" href="./styles.css?v=2">
 </head>
 <body>
   <main class="page-shell">
@@ -19,50 +19,28 @@
       <div class="form-section">
         <h2>Location</h2>
         <div class="choice-grid location-grid" data-group="location">
-          <button class="choice-button" type="button" data-value="campus" aria-pressed="false">
-            <span class="choice-icon" aria-hidden="true">🏫</span>
-            On Campus
-          </button>
-          <button class="choice-button" type="button" data-value="offCampus" aria-pressed="false">
-            <span class="choice-icon" aria-hidden="true">🚗</span>
-            Off Campus
-          </button>
-          <button class="choice-button" type="button" data-value="room" aria-pressed="true">
-            <span class="choice-icon" aria-hidden="true">🏠</span>
-            In My Room
-          </button>
+          <button class="choice-button" type="button" data-value="campus" aria-pressed="false">On Campus</button>
+          <button class="choice-button" type="button" data-value="offCampus" aria-pressed="false">Off Campus</button>
+          <button class="choice-button" type="button" data-value="room" aria-pressed="true">In My Room</button>
         </div>
       </div>
 
-      <div id="activitySection" class="form-section">
-        <h2>If in room, I am currently</h2>
-        <div class="choice-grid" data-group="activity">
-          <button class="choice-button" type="button" data-value="sleeping" aria-pressed="false">
-            <span class="choice-icon" aria-hidden="true">😴</span>
-            Sleeping
-          </button>
-          <button class="choice-button long-label" type="button" data-value="working" aria-pressed="false">
-            <span class="choice-icon" aria-hidden="true">📚</span>
-            Homework / Club Stuff / Something Important
-          </button>
-          <button class="choice-button" type="button" data-value="chilling" aria-pressed="true">
-            <span class="choice-icon" aria-hidden="true">😎</span>
-            Chilling
-          </button>
+      <div id="roomOnlySection">
+        <div id="activitySection" class="form-section">
+          <h2>If in room, I am currently</h2>
+          <div class="choice-grid" data-group="activity">
+            <button class="choice-button" type="button" data-value="sleeping" aria-pressed="false">Sleeping</button>
+            <button class="choice-button long-label" type="button" data-value="working" aria-pressed="false">Homework / Club Stuff / Something Important</button>
+            <button class="choice-button" type="button" data-value="chilling" aria-pressed="true">Chilling</button>
+          </div>
         </div>
-      </div>
 
-      <div class="form-section">
-        <h2>Do Not Disturb?</h2>
-        <div class="choice-grid two" data-group="doNotDisturb">
-          <button class="choice-button" type="button" data-value="true" aria-pressed="false">
-            <span class="choice-icon" aria-hidden="true">🔴</span>
-            Yes
-          </button>
-          <button class="choice-button" type="button" data-value="false" aria-pressed="true">
-            <span class="choice-icon" aria-hidden="true">🟢</span>
-            No
-          </button>
+        <div class="form-section">
+          <h2>Do Not Disturb?</h2>
+          <div class="choice-grid two" data-group="doNotDisturb">
+            <button class="choice-button" type="button" data-value="true" aria-pressed="false"><span aria-hidden="true">🔴</span> Yes</button>
+            <button class="choice-button" type="button" data-value="false" aria-pressed="true"><span aria-hidden="true">🟢</span> No</button>
+          </div>
         </div>
       </div>
 
@@ -73,18 +51,10 @@
     <details id="setupCard" class="setup-card">
       <summary>One-time phone setup</summary>
       <p>Your phone needs a limited GitHub token so this page can update the shared status file.</p>
-      <ol>
-        <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">GitHub’s fine-grained token page</a>.</li>
-        <li>Give the token access only to the <strong>where-am-I-</strong> repository.</li>
-        <li>Under repository permissions, set <strong>Contents</strong> to <strong>Read and write</strong>.</li>
-        <li>Create the token, copy it, and paste it below.</li>
-      </ol>
-
       <div class="token-row">
         <input id="tokenInput" class="token-input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste GitHub token">
         <button id="saveTokenButton" class="secondary-button" type="button">Save Token on This Phone</button>
       </div>
-
       <div id="connectionLine" class="connection-line hidden">
         <span>GitHub is connected on this phone.</span>
         <button id="forgetTokenButton" class="text-button" type="button">Forget token</button>
@@ -99,18 +69,14 @@
       "use strict";
 
       const owner = "ajohnson2942";
-      const repo = "where-am-I-";
+      const repo = "Where-am-I-";
       const branch = "main";
       const statusPath = "status.json";
       const tokenStorageKey = "whereAmI.githubToken.where-am-I-";
 
-      const state = {
-        location: "room",
-        activity: "chilling",
-        doNotDisturb: false
-      };
+      const state = { location: "room", activity: "chilling", doNotDisturb: false };
 
-      const activitySection = document.getElementById("activitySection");
+      const roomOnlySection = document.getElementById("roomOnlySection");
       const saveButton = document.getElementById("saveButton");
       const saveMessage = document.getElementById("saveMessage");
       const setupCard = document.getElementById("setupCard");
@@ -119,9 +85,7 @@
       const forgetTokenButton = document.getElementById("forgetTokenButton");
       const connectionLine = document.getElementById("connectionLine");
 
-      function getToken() {
-        return localStorage.getItem(tokenStorageKey) || "";
-      }
+      function getToken() { return localStorage.getItem(tokenStorageKey) || ""; }
 
       function setMessage(text, type = "") {
         saveMessage.textContent = text;
@@ -136,14 +100,13 @@
         setupCard.open = !connected;
       }
 
-      function updateActivityVisibility() {
-        activitySection.classList.toggle("hidden", state.location !== "room");
+      function updateRoomOnlyVisibility() {
+        roomOnlySection.classList.toggle("hidden", state.location !== "room");
       }
 
       function selectButton(groupName, value) {
         const group = document.querySelector(`[data-group="${groupName}"]`);
         if (!group) return;
-
         group.querySelectorAll(".choice-button").forEach(button => {
           button.setAttribute("aria-pressed", String(button.dataset.value === String(value)));
         });
@@ -153,7 +116,7 @@
         selectButton("location", state.location);
         selectButton("activity", state.activity);
         selectButton("doNotDisturb", state.doNotDisturb);
-        updateActivityVisibility();
+        updateRoomOnlyVisibility();
       }
 
       function decodeBase64Utf8(value) {
@@ -165,33 +128,19 @@
       function encodeBase64Utf8(value) {
         const bytes = new TextEncoder().encode(value);
         let binary = "";
-        bytes.forEach(byte => {
-          binary += String.fromCharCode(byte);
-        });
+        bytes.forEach(byte => { binary += String.fromCharCode(byte); });
         return btoa(binary);
       }
 
       async function getStatusFile(token = "") {
         const url = `https://api.github.com/repos/${owner}/${repo}/contents/${statusPath}?ref=${branch}&t=${Date.now()}`;
-        const headers = {
-          Accept: "application/vnd.github+json",
-          "X-GitHub-Api-Version": "2022-11-28"
-        };
-
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-
-        const response = await fetch(url, {
-          cache: "no-store",
-          headers
-        });
-
+        const headers = { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+        if (token) headers.Authorization = `Bearer ${token}`;
+        const response = await fetch(url, { cache: "no-store", headers });
         if (!response.ok) {
           const body = await response.json().catch(() => ({}));
           throw new Error(body.message || `GitHub returned ${response.status}`);
         }
-
         return response.json();
       }
 
@@ -210,7 +159,6 @@
 
       async function saveStatus() {
         const token = getToken();
-
         if (!token) {
           setupCard.open = true;
           tokenInput.focus();
@@ -251,7 +199,6 @@
             const body = await response.json().catch(() => ({}));
             throw new Error(body.message || `GitHub returned ${response.status}`);
           }
-
           setMessage("Status updated everywhere.", "success");
         } catch (error) {
           console.error(error);
@@ -266,38 +213,28 @@
         group.addEventListener("click", event => {
           const button = event.target.closest(".choice-button");
           if (!button) return;
-
           const groupName = group.dataset.group;
           const rawValue = button.dataset.value;
-
-          if (groupName === "doNotDisturb") {
-            state.doNotDisturb = rawValue === "true";
-          } else {
-            state[groupName] = rawValue;
-          }
-
+          if (groupName === "doNotDisturb") state.doNotDisturb = rawValue === "true";
+          else state[groupName] = rawValue;
           selectButton(groupName, rawValue);
-          updateActivityVisibility();
+          updateRoomOnlyVisibility();
           setMessage("");
         });
       });
 
       saveButton.addEventListener("click", saveStatus);
-
       saveTokenButton.addEventListener("click", () => {
         const token = tokenInput.value.trim();
-
         if (!token) {
           setMessage("Paste your GitHub token first.", "error");
           return;
         }
-
         localStorage.setItem(tokenStorageKey, token);
         tokenInput.value = "";
         updateTokenUi();
         setMessage("Phone connected. You can now save your status.", "success");
       });
-
       forgetTokenButton.addEventListener("click", () => {
         localStorage.removeItem(tokenStorageKey);
         updateTokenUi();
@@ -307,7 +244,6 @@
       updateTokenUi();
       applyStateToButtons();
       loadCurrentStatus();
-
     })();
   </script>
 </body>
