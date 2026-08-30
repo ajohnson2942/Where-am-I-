@@ -1,6 +1,6 @@
 {
-  "location": "campus",
-  "activity": "chilling",
-  "doNotDisturb": false,
-  "updatedAt": "2026-08-30T00:38:55.992Z"
+  "location": "room",
+  "activity": "sleeping",
+  "doNotDisturb": true,
+  "updatedAt": "2026-08-30T06:23:29.227Z"
 }
