@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#2457e6">
   <meta name="description" content="Current location, room activity, and availability status.">
   <title>Where Am I?</title>
-  <link rel="stylesheet" href="./styles.css?v=3">
+  <link rel="stylesheet" href="./styles.css?v=4">
 </head>
 <body>
   <main class="page-shell">
@@ -49,7 +49,9 @@
         const inRoom = status.location === "room";
         const activity = activities[status.activity] || activities.chilling;
         const dnd = Boolean(status.doNotDisturb);
+        const showTalkingStatus = Boolean(status.showTalkingStatus);
         const feelsLikeTalking = Boolean(status.feelsLikeTalking);
+
         card.innerHTML = `
           <div class="status-section">
             <p class="status-label">Location</p>
@@ -64,10 +66,12 @@
               <p class="status-label">Do Not Disturb?</p>
               <span class="dnd-pill ${dnd ? "yes" : "no"}">${dnd ? "🔴 Yes" : "🟢 No"}</span>
             </div>
-            <div class="status-section">
-              <p class="status-label">Do I feel like talking right now?</p>
-              <p class="status-value"><span>${feelsLikeTalking ? "Yes" : "No"}</span></p>
-            </div>
+            ${showTalkingStatus ? `
+              <div class="status-section">
+                <p class="status-label">Do I feel like talking right now?</p>
+                <p class="status-value"><span>${feelsLikeTalking ? "Yes" : "No"}</span></p>
+              </div>
+            ` : ""}
           ` : ""}
         `;
       }

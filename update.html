@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#2457e6">
   <meta name="description" content="Update location, room activity, and availability status.">
   <title>Update My Status</title>
-  <link rel="stylesheet" href="./styles.css?v=3">
+  <link rel="stylesheet" href="./styles.css?v=4">
 </head>
 <body>
   <main class="page-shell">
@@ -44,6 +44,14 @@
         </div>
 
         <div class="form-section">
+          <h2>Show talking status on main page?</h2>
+          <div class="choice-grid two" data-group="showTalkingStatus">
+            <button class="choice-button" type="button" data-value="true" aria-pressed="false">Show</button>
+            <button class="choice-button" type="button" data-value="false" aria-pressed="true">Hide</button>
+          </div>
+        </div>
+
+        <div id="talkingStatusSection" class="form-section hidden">
           <h2>Do I feel like talking right now?</h2>
           <div class="choice-grid two" data-group="feelsLikeTalking">
             <button class="choice-button" type="button" data-value="true" aria-pressed="false">Yes</button>
@@ -80,8 +88,16 @@
       const branch = "main";
       const statusPath = "status.json";
       const tokenStorageKey = "whereAmI.githubToken.where-am-I-";
-      const state = { location: "room", activity: "chilling", doNotDisturb: false, feelsLikeTalking: false };
+      const state = {
+        location: "room",
+        activity: "chilling",
+        doNotDisturb: false,
+        showTalkingStatus: false,
+        feelsLikeTalking: false
+      };
+
       const roomOnlySection = document.getElementById("roomOnlySection");
+      const talkingStatusSection = document.getElementById("talkingStatusSection");
       const saveButton = document.getElementById("saveButton");
       const saveMessage = document.getElementById("saveMessage");
       const setupCard = document.getElementById("setupCard");
@@ -99,7 +115,11 @@
         saveTokenButton.classList.toggle("hidden", connected);
         setupCard.open = !connected;
       }
-      function updateRoomOnlyVisibility() { roomOnlySection.classList.toggle("hidden", state.location !== "room"); }
+      function updateConditionalVisibility() {
+        const inRoom = state.location === "room";
+        roomOnlySection.classList.toggle("hidden", !inRoom);
+        talkingStatusSection.classList.toggle("hidden", !inRoom || !state.showTalkingStatus);
+      }
       function selectButton(groupName, value) {
         const group = document.querySelector(`[data-group="${groupName}"]`);
         if (!group) return;
@@ -111,8 +131,9 @@
         selectButton("location", state.location);
         selectButton("activity", state.activity);
         selectButton("doNotDisturb", state.doNotDisturb);
+        selectButton("showTalkingStatus", state.showTalkingStatus);
         selectButton("feelsLikeTalking", state.feelsLikeTalking);
-        updateRoomOnlyVisibility();
+        updateConditionalVisibility();
       }
       function decodeBase64Utf8(value) {
         const binary = atob(value.replace(/\n/g, ""));
@@ -143,6 +164,7 @@
           state.location = current.location || state.location;
           state.activity = current.activity || state.activity;
           state.doNotDisturb = Boolean(current.doNotDisturb);
+          state.showTalkingStatus = Boolean(current.showTalkingStatus);
           state.feelsLikeTalking = Boolean(current.feelsLikeTalking);
           applyStateToButtons();
         } catch (error) {
@@ -166,6 +188,7 @@
             location: state.location,
             activity: state.activity,
             doNotDisturb: state.doNotDisturb,
+            showTalkingStatus: state.showTalkingStatus,
             feelsLikeTalking: state.feelsLikeTalking,
             updatedAt: new Date().toISOString()
           };
@@ -197,19 +220,21 @@
           saveButton.textContent = "Save Status";
         }
       }
+
       document.querySelectorAll("[data-group]").forEach(group => {
         group.addEventListener("click", event => {
           const button = event.target.closest(".choice-button");
           if (!button) return;
           const groupName = group.dataset.group;
           const rawValue = button.dataset.value;
-          if (groupName === "doNotDisturb" || groupName === "feelsLikeTalking") state[groupName] = rawValue === "true";
+          if (["doNotDisturb", "showTalkingStatus", "feelsLikeTalking"].includes(groupName)) state[groupName] = rawValue === "true";
           else state[groupName] = rawValue;
           selectButton(groupName, rawValue);
-          updateRoomOnlyVisibility();
+          updateConditionalVisibility();
           setMessage("");
         });
       });
+
       saveButton.addEventListener("click", saveStatus);
       saveTokenButton.addEventListener("click", () => {
         const token = tokenInput.value.trim();
@@ -227,6 +252,7 @@
         updateTokenUi();
         setMessage("The saved token was removed from this phone.");
       });
+
       updateTokenUi();
       applyStateToButtons();
       loadCurrentStatus();
