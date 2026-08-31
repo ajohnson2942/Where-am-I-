@@ -2,5 +2,6 @@
   "location": "room",
   "activity": "chilling",
   "doNotDisturb": false,
+  "feelsLikeTalking": false,
   "updatedAt": "2026-08-31T04:41:56.815Z"
 }
