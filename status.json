@@ -1,7 +1,7 @@
 {
   "location": "room",
-  "activity": "chilling",
-  "doNotDisturb": false,
-  "feelsLikeTalking": false,
-  "updatedAt": "2026-08-31T05:38:12.527Z"
+  "activity": "sleeping",
+  "doNotDisturb": true,
+  "feelsLikeTalking": true,
+  "updatedAt": "2026-08-31T06:15:10.341Z"
 }
