@@ -3,6 +3,6 @@
   "activity": "working",
   "doNotDisturb": true,
   "showTalkingStatus": true,
-  "feelsLikeTalking": true,
-  "updatedAt": "2026-09-01T04:27:26.473Z"
+  "feelsLikeTalking": false,
+  "updatedAt": "2026-09-01T04:27:28.373Z"
 }
