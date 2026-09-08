@@ -1,8 +1,8 @@
 {
-  "location": "offCampus",
+  "location": "room",
   "activity": "working",
-  "doNotDisturb": false,
+  "doNotDisturb": true,
   "showTalkingStatus": false,
   "feelsLikeTalking": false,
-  "updatedAt": "2026-09-08T00:01:40.979Z"
+  "updatedAt": "2026-09-08T05:00:10.970Z"
 }
