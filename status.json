@@ -2,7 +2,7 @@
   "location": "room",
   "activity": "chilling",
   "doNotDisturb": false,
-  "showTalkingStatus": true,
+  "showTalkingStatus": false,
   "feelsLikeTalking": false,
-  "updatedAt": "2026-09-10T05:00:19.687Z"
+  "updatedAt": "2026-09-10T16:11:16.302Z"
 }
