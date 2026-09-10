@@ -1,8 +1,8 @@
 {
   "location": "room",
-  "activity": "working",
-  "doNotDisturb": true,
+  "activity": "chilling",
+  "doNotDisturb": false,
   "showTalkingStatus": true,
   "feelsLikeTalking": false,
-  "updatedAt": "2026-09-10T05:00:15.210Z"
+  "updatedAt": "2026-09-10T05:00:19.687Z"
 }
