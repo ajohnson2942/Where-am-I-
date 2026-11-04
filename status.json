@@ -1,8 +1,8 @@
 {
-  "location": "campus",
-  "activity": "working",
+  "location": "room",
+  "activity": "sleeping",
   "doNotDisturb": true,
   "showTalkingStatus": false,
   "feelsLikeTalking": false,
-  "updatedAt": "2026-11-04T03:09:19.139Z"
+  "updatedAt": "2026-11-04T06:58:29.999Z"
 }
